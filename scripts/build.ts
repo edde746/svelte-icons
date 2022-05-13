@@ -205,40 +205,12 @@ interface Element {
 async function convertIconData(svg: string) {
   const $svg = cheerio.load(svg, { xmlMode: true })('svg');
 
-  // filter/convert attributes
-  // 1. remove class attr
-  // 2. convert to camelcase ex: fill-opacity => fillOpacity
-  const attrConverter = (attribs: { [key: string]: string }, tagName: string) =>
-    attribs &&
-    Object.keys(attribs)
-      .filter(
-        (name) =>
-          ![
-            'class',
-            ...(tagName === 'svg' ? ['xmlns', 'xmlns:xlink', 'xml:space', 'width', 'height'] : []), // if tagName is svg remove size attributes
-          ].includes(name)
-      )
-      .reduce((obj, name) => {
-        const newName = camelcase(name);
-        switch (newName) {
-          case 'fill':
-            if (attribs[name] === 'none') {
-              obj[newName] = attribs[name];
-            }
-            break;
-          default:
-            obj[newName] = attribs[name];
-            break;
-        }
-        return obj;
-      }, {});
-
   const elementToTree: any = (element: any) =>
     element
       .filter((_: any, e: any) => !!e.tagName && !['style'].includes(e.tagName))
       .map((_: any, e: any) => ({
         tag: e.tagName,
-        attr: attrConverter(e.attribs, e.tagName),
+        attr: e.attribs,
         child: e.children && e.children.length ? elementToTree(cheerio(e.children)) : undefined,
       }))
       .get();
@@ -282,10 +254,18 @@ async function writeIconModule(icon: Icon) {
       const { attr, child } = iconData;
       const { viewBox } = attr;
 
+      // convert camealcase to dash-case
+      const attrStr = (attr: { [key: string]: string }) => {
+        const str = Object.keys(attr)
+          .filter((key) => key !== 'class')
+          .map((key) => `${key}="${attr[key]}"`)
+          .join(' ');
+        return str;
+      };
+
       const svgContent = child
         .map(({ attr }) => {
-          const { d } = attr;
-          return `<path d="${d}" />`;
+          return `<path ${attrStr(attr)} />`;
         })
         .join('\n');
 
@@ -294,7 +274,7 @@ async function writeIconModule(icon: Icon) {
         `<script>
         import Icon from '../Icon.svelte';
         </script>
-        <Icon viewBox="${viewBox}" ${attr?.fill ? `fill="${attr.fill}"` : ''} {...$$props}>
+        <Icon ${attrStr(attr)} {...$$props}>
           ${svgContent}
         </Icon>
       `

@@ -9,11 +9,3 @@
   {/if}
   <slot />
 </svg>
-
-<style>
-  svg {
-    stroke: currentColor;
-    fill: currentColor;
-    stroke-width: 0;
-  }
-</style>
