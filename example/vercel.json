@@ -1,7 +1,0 @@
-{
-  "version": 2,
-  "env": {
-    "NODE_ENV": "production",
-    "IS_NOW": "true"
-  }
-}
