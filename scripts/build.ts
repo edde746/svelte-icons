@@ -18,6 +18,8 @@ interface Icon {
   id: string;
   name: string;
   contents: Content[];
+  forceFill?: boolean;
+  forceStroke?: boolean;
 }
 
 const icons: Icon[] = [
@@ -34,6 +36,7 @@ const icons: Icon[] = [
         formatter: (name) => `FaReg${name}`,
       },
     ],
+    forceFill: true,
   },
   {
     id: 'io',
@@ -203,15 +206,15 @@ interface Element {
   child: Element[];
 }
 
-async function convertIconData(svg: string) {
+async function convertIconData(svg: string, icon: Icon) {
   const $svg = cheerio.load(svg, { xmlMode: true })('svg');
 
   const elementToTree: any = (element: any) =>
     element
       .filter((_: any, e: any) => !!e.tagName && !['style'].includes(e.tagName))
       .map((_: any, e: any) => {
-        if (e.attribs.stroke && e.attribs.stroke !== 'none') e.attribs.stroke = 'currentColor';
-        if (e.attribs.fill && e.attribs.fill !== 'none') e.attribs.fill = 'currentColor';
+        if ((e.attribs.stroke && e.attribs.stroke !== 'none') || icon.forceStroke) e.attribs.stroke = 'currentColor';
+        if ((e.attribs.fill && e.attribs.fill !== 'none') || icon.forceFill) e.attribs.fill = 'currentColor';
 
         return {
           tag: e.tagName,
@@ -241,7 +244,7 @@ async function writeIconModule(icon: Icon) {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const svgStr = await fs.readFile(file, 'utf8');
-      const iconData = await convertIconData(svgStr);
+      const iconData = await convertIconData(svgStr, icon);
 
       const rawName = path.basename(file, path.extname(file));
 
