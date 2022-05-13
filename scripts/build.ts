@@ -196,6 +196,7 @@ interface Element {
   tag: string;
   attr: {
     fill: any;
+    stroke: any;
     viewBox: string;
     d: string;
   };
@@ -208,11 +209,16 @@ async function convertIconData(svg: string) {
   const elementToTree: any = (element: any) =>
     element
       .filter((_: any, e: any) => !!e.tagName && !['style'].includes(e.tagName))
-      .map((_: any, e: any) => ({
-        tag: e.tagName,
-        attr: e.attribs,
-        child: e.children && e.children.length ? elementToTree(cheerio(e.children)) : undefined,
-      }))
+      .map((_: any, e: any) => {
+        if (e.attribs.stroke && e.attribs.stroke !== 'none') e.attribs.stroke = 'currentColor';
+        if (e.attribs.fill && e.attribs.fill !== 'none') e.attribs.fill = 'currentColor';
+
+        return {
+          tag: e.tagName,
+          attr: e.attribs,
+          child: e.children && e.children.length ? elementToTree(cheerio(e.children)) : undefined,
+        };
+      })
       .get();
 
   const tree = elementToTree($svg);

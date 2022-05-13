@@ -1,6 +1,6 @@
 # svelte-icons
 
-The best svelte icon library.
+The best Svelte icon library.
 
 ## Installation
 
