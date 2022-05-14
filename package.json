@@ -1,8 +1,9 @@
 {
   "name": "@edde746/svelte-icons",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "scripts": {
     "build": "cd scripts && tsc build.ts --esModuleInterop && mv build.js build.cjs && cd .. && node scripts/build.cjs && svelte-kit package",
+    "publish": "npm run build && cd package && npm publish",
     "submodule": "git submodule update --init --recursive",
     "submodule-deinit": "git submodule deinit --all"
   },
