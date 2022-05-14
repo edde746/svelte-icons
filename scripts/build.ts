@@ -18,7 +18,10 @@ interface Icon {
   id: string;
   name: string;
   contents: Content[];
-  forceFill?: boolean;
+  forceFill?: {
+    all: boolean;
+    root: boolean;
+  };
   forceStroke?: boolean;
 }
 
@@ -36,7 +39,10 @@ const icons: Icon[] = [
         formatter: (name) => `FaReg${name}`,
       },
     ],
-    forceFill: true,
+    forceFill: {
+      root: true,
+      all: false,
+    },
   },
   {
     id: 'io',
@@ -213,8 +219,10 @@ async function convertIconData(svg: string, icon: Icon) {
     element
       .filter((_: any, e: any) => !!e.tagName && !['style'].includes(e.tagName))
       .map((_: any, e: any) => {
-        if ((e.attribs.stroke && e.attribs.stroke !== 'none') || icon.forceStroke) e.attribs.stroke = 'currentColor';
-        if ((e.attribs.fill && e.attribs.fill !== 'none') || icon.forceFill) e.attribs.fill = 'currentColor';
+        if (e.attribs.stroke && e.attribs.stroke !== 'none') e.attribs.stroke = 'currentColor';
+        if (e.attribs.fill && e.attribs.fill !== 'none') e.attribs.fill = 'currentColor';
+
+        if (icon.forceFill?.all || (icon.forceFill?.root && e.tagName === 'svg')) e.attribs.fill = 'currentColor';
 
         return {
           tag: e.tagName,
@@ -281,12 +289,12 @@ async function writeIconModule(icon: Icon) {
       await write(
         [icon.id, `${name}.svelte`],
         `<script>
-        import Icon from '../Icon.svelte';
-        </script>
-        <Icon ${attrStr(attr)} {...$$props}>
-          ${svgContent}
-        </Icon>
-      `
+  import Icon from '../Icon.svelte';
+</script>
+<Icon ${attrStr(attr)} {...$$props}>
+  ${svgContent}
+</Icon>
+`
       );
 
       filepaths.add(file);
